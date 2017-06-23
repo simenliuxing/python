@@ -10,6 +10,7 @@ import requests
 import json
 import sys
 import collections
+from requests.exceptions import ProxyError
 default_encoding = 'utf-8'
 if sys.getdefaultencoding() != default_encoding:
     reload(sys)
@@ -21,6 +22,14 @@ headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64; x64) "
                   "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"
     }
+# 代理
+proxies = {
+  "HTTPS": "https://114.230.234.223:808",
+  "HTTP": "http://110.73.6.124:8123",
+  "HTTPS": "https://221.229.44.14:808",
+  "HTTP": "http://116.226.90.12:808",
+  "HTTPS": "https://218.108.107.70:909"
+}
 
 
 # 爬取数据
@@ -28,7 +37,14 @@ def spider_wd():
     try:
         # 先直接获取首页的总量
         url = 'https://www.weidai.com.cn/indexSummaryTrade'
-        con = requests.get(url, headers=headers, timeout=10)
+        try:
+            # 使用代理
+            con = requests.get(url, headers=headers, timeout=10, proxies=proxies)
+        except ProxyError:
+            print("ProxyError Exception ,use no proxies ")
+            # 不使用代理
+            con = requests.get(url, headers=headers, timeout=10)
+
         rest = json.loads(con.content)
 
         # 返回结果
@@ -87,6 +103,6 @@ def re_spider_wd():
 if __name__ == '__main__':
     # print(re_spider_wdw())
     for n in range(1, 2):
-        print(re_spider_wd())
+        print(spider_wd())
 
 

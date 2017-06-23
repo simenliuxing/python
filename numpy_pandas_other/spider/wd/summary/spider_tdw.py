@@ -12,10 +12,19 @@ from lxml import etree
 import json
 import sys
 import collections
+from requests.exceptions import ProxyError
 default_encoding = 'utf-8'
 if sys.getdefaultencoding() != default_encoding:
     reload(sys)
     sys.setdefaultencoding(default_encoding)
+# 代理
+proxies = {
+  "HTTPS": "https://114.230.234.223:808",
+  "HTTP": "http://110.73.6.124:8123",
+  "HTTPS": "https://221.229.44.14:808",
+  "HTTP": "http://116.226.90.12:808",
+  "HTTPS": "https://218.108.107.70:909"
+}
 
 
 # 爬取数据
@@ -23,9 +32,15 @@ def spider_wd():
     try:
         # 先直接获取
         url = 'https://www.tdw.cn/'
-        con = requests.get(url, timeout=10).content
-        soup = BeautifulSoup(con, "lxml")
+        try:
+            # 使用代理
+            con = requests.get(url, timeout=10, proxies=proxies).content
+        except ProxyError:
+            print("ProxyError Exception ,use no proxies ")
+            # 不使用代理
+            con = requests.get(url, timeout=10).content
 
+        soup = BeautifulSoup(con, "lxml")
         # 如果之获取到<meta，则之获取到了缓存，则需要拿里面的参数重新获取
         if con.startswith('<meta'):
             # 获取缓存参数
@@ -34,7 +49,13 @@ def spider_wd():
             # 组拼新的url
             url += new_url
             # 重新请求
-            con = requests.get(url, timeout=10).content
+            try:
+                # 使用代理
+                con = requests.get(url, timeout=10, proxies=proxies).content
+            except ProxyError:
+                print("ProxyError Exception ,use no proxies ")
+                # 不使用代理
+                con = requests.get(url, timeout=10).content
 
         # xpath解析
         tree = etree.HTML(con)
@@ -108,6 +129,7 @@ def re_spider_wd():
     return json.dumps(message).decode('unicode-escape')
 
 if __name__ == '__main__':
-    print(re_spider_wd())
+    for n in range(1, 100):
+        print(spider_wd())
 
 

@@ -10,6 +10,7 @@ import requests
 import json
 import sys
 import collections
+from requests.exceptions import ProxyError
 default_encoding = 'utf-8'
 if sys.getdefaultencoding() != default_encoding:
     reload(sys)
@@ -23,6 +24,14 @@ headers = {
                   "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36",
     "X-Requested-With": "XMLHttpRequest"
     }
+# 代理
+proxies = {
+  "HTTPS": "https://114.230.234.223:808",
+  "HTTP": "http://110.73.6.124:8123",
+  "HTTPS": "https://221.229.44.14:808",
+  "HTTP": "http://116.226.90.12:808",
+  "HTTPS": "https://218.108.107.70:909"
+}
 
 # 平台名称
 source_from = "微贷网"
@@ -129,8 +138,15 @@ def spider_wd(url, payload, project_type):
     :rtype:
     """
     try:
+        try:
+            # 使用代理
+            con = requests.get(url, headers=headers, timeout=20, params=payload, proxies=proxies)
+        except ProxyError:
+            print("ProxyError Exception ,use no proxies ")
+            # 不使用代理
+            con = requests.get(url, headers=headers, timeout=20, params=payload)
+
         # 先直接获取首页的总量
-        con = requests.get(url, headers=headers, timeout=20, params=payload)
         rest = json.loads(con.content)
         return parse_data(rest, project_type)
     except Exception as e:
@@ -176,14 +192,27 @@ def re_spider_wd_pages(url, project_type):
     :param url: 请求的链接
     :param project_type: 爬取的类型
     """
-    con = requests.get(url, headers=headers, timeout=20)
+    try:
+        # 使用代理
+        con = requests.get(url, headers=headers, timeout=20, proxies=proxies)
+    except ProxyError:
+        print("ProxyError Exception ,use no proxies ")
+        # 不使用代理
+        con = requests.get(url, headers=headers, timeout=20)
+
     rest = json.loads(con.content)
     # 如果请求失败，则重复十次
     if not rest["success"]:
         for num in range(1, 10):
             time.sleep(1)
             if not rest["success"]:
-                con = requests.get(url, headers=headers, timeout=20)
+                try:
+                    # 使用代理
+                    con = requests.get(url, headers=headers, timeout=20, proxies=proxies)
+                except ProxyError:
+                    print("ProxyError Exception ,use no proxies ")
+                    # 不使用代理
+                    con = requests.get(url, headers=headers, timeout=20)
                 rest = json.loads(con.content)
             else:
                 break
@@ -193,6 +222,7 @@ def re_spider_wd_pages(url, project_type):
         count = 0
         for p in range(0, pages):
             time.sleep(0.6)
+            print("第" + str(p + 1) + "页的数据：")
             # 发送的参数
             # 优选计划
             if "you" == project_type:
@@ -217,7 +247,7 @@ def insert_db(result):
         result = json.loads(result)
         if result['statue_code'] != 0:
             with connection.cursor() as cursor:
-                sql = 'INSERT INTO ods_wd_detail_info (bid, from_platform, hash, uid, title, ' \
+                sql = 'INSERT INTO ods_wdw_project_info (bid, from_platform, hash, uid, title, ' \
                       'bizCategory, bizProp, repaymentStyle, bidAmount, biddedAmount, ' \
                       'annualizedRate, duration, openTime, closeTime, status, ' \
                       'additionalEarnings, additionalAnnualizedRate, tags, activityTags, ' \
@@ -230,7 +260,7 @@ def insert_db(result):
                 for m in result['msg']:
                     bid = m["标id".decode("utf-8")]
                     # 如果数据库中没有记录，则插入
-                    if 0 == cursor.execute("SELECT * FROM ods_wd_detail_info WHERE bid="+str(bid)+""):
+                    if 0 == cursor.execute("SELECT * FROM ods_wdw_project_info WHERE bid="+str(bid)+""):
                         msg_data = (m["标id".decode("utf-8")], m["来源平台".decode("utf-8")],
                                     m["hash".decode("utf-8")], m["uid".decode("utf-8")],
                                     m["标名称".decode("utf-8")], m["bizCategory".decode("utf-8")],
@@ -248,8 +278,6 @@ def insert_db(result):
                                     )
                         msg_list.append(msg_data)
                         insert_count += 1
-                    else:
-                        print("该"+str(bid)+"已经存在")
                 print("该批次插入了："+str(len(msg_list))+"条记录！\n")
                 cursor.executemany(sql, msg_list)
                 connection.commit()

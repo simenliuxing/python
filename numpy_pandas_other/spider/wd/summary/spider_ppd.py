@@ -11,10 +11,19 @@ from lxml import etree
 import json
 import sys
 import collections
+from requests.exceptions import ProxyError
 default_encoding = 'utf-8'
 if sys.getdefaultencoding() != default_encoding:
     reload(sys)
     sys.setdefaultencoding(default_encoding)
+# 代理
+proxies = {
+  "HTTPS": "https://114.230.234.223:808",
+  "HTTP": "http://110.73.6.124:8123",
+  "HTTPS": "https://221.229.44.14:808",
+  "HTTP": "http://116.226.90.12:808",
+  "HTTPS": "https://218.108.107.70:909"
+}
 
 
 # 爬取数据
@@ -22,7 +31,13 @@ def spider_wd():
     try:
         # 先直接获取
         url = 'http://www.ppdai.com/'
-        con = requests.get(url, timeout=10).content
+        try:
+            # 使用代理
+            con = requests.get(url, timeout=10, proxies=proxies).content
+        except ProxyError:
+            print("ProxyError Exception ,use no proxies ")
+            # 不使用代理
+            con = requests.get(url, timeout=10).content
 
         # xpath解析
         tree = etree.HTML(con)
@@ -84,6 +99,6 @@ def re_spider_wd():
 if __name__ == '__main__':
     for n in range(1, 2):
         print(n)
-        print(re_spider_wd())
+        print(spider_wd())
 
 

@@ -9,10 +9,19 @@ import requests
 import json
 import sys
 import collections
+from requests.exceptions import ProxyError
 default_encoding = 'utf-8'
 if sys.getdefaultencoding() != default_encoding:
     reload(sys)
     sys.setdefaultencoding(default_encoding)
+# 代理
+proxies = {
+  "HTTPS": "https://114.230.234.223:808",
+  "HTTP": "http://110.73.6.124:8123",
+  "HTTPS": "https://221.229.44.14:808",
+  "HTTP": "http://116.226.90.12:808",
+  "HTTPS": "https://218.108.107.70:909"
+}
 
 
 # 爬取今日头条搜索到的url
@@ -26,8 +35,14 @@ def spider_url():
         link_list = []
         # 迭代所有的链接
         while True:
-            # 先直接获取
-            con = requests.get(url, timeout=10).content
+            try:
+                # 使用代理
+                con = requests.get(url, timeout=10, proxies=proxies).content
+            except ProxyError:
+                print("ProxyError Exception ,use no proxies ")
+                # 不使用代理
+                con = requests.get(url, timeout=10).content
+
             rest = json.loads(con)
             # 返回结果正确
             if "success" == rest["message"] and rest["return_count"] > 0:
@@ -37,8 +52,8 @@ def spider_url():
                     if r.has_key("media_name") \
                             and r.has_key("title") \
                             and r.has_key("display_url") \
-                            and r.has_key("media_creator_id") \
-                            and 4082153852 == r["media_creator_id"]:
+                            and r.has_key("media_creator_id"):
+                            # and 4082153852 == r["media_creator_id"]:
                         link_dict = collections.OrderedDict()
                         link_dict["来源平台"] = r["media_name"]
                         link_dict["事件信息"] = r["title"]
@@ -62,7 +77,14 @@ def spider_url():
 # 爬取今日头条搜索到的url,中的每页的具体数据
 def spider_data(url):
     try:
-        con = requests.get(url, timeout=10).content
+        try:
+            # 使用代理
+            con = requests.get(url, timeout=10, proxies=proxies).content
+        except ProxyError:
+            print("ProxyError Exception ,use no proxies ")
+            # 不使用代理
+            con = requests.get(url, timeout=10).content
+
         # xpath解析
         tree = etree.HTML(con)
         # 返回结果
