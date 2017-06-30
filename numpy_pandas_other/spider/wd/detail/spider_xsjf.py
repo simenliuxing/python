@@ -192,7 +192,7 @@ def re_spider_wd(url, payload):
     if 200 == result["code"]:
         # 如果没有爬取成功则，重爬
         for num in range(1, 20):
-            if 0 == result:
+            if 200 == result["code"]:
                 print("reconnect "+str(num)+" times!!!")
                 time.sleep(2)
                 result = spider_wd(url, payload)

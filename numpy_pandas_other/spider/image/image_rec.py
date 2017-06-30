@@ -12,12 +12,14 @@ from pytesser import *
 # print pytesseract.image_to_string(Image.open("5555.jpeg"))
 
 
-print image_file_to_string("1111.jpg")
-print image_file_to_string("2222.jpg")
-print image_file_to_string("3333.png")
-print image_file_to_string("4444.jpg")
-print image_file_to_string("5555.jpeg")
-print image_file_to_string("6666.jpg")
+# print image_file_to_string("1111.jpg")
+# print image_file_to_string("2222.jpg")
+# print image_file_to_string("3333.png")
+# print image_file_to_string("4444.jpg")
+# print image_file_to_string("5555.jpeg")
+# print image_file_to_string("6666.jpg")
+print image_file_to_string("http://shixin.court.gov.cn/captchaNew.do?"
+                           "captchaId=038eda2136a4478ab166874e92792bed&random=0.7420371655304532")
 
 
 
