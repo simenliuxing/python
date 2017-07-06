@@ -7,7 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # 默认figure
-x = np.linspace(-1,1,50)
+x = np.linspace(-1, 1, 50)
 y = 2*x+1
 # y = x**2
 # plt.plot(x,y)
@@ -15,14 +15,14 @@ y = 2*x+1
 
 
 # 一个figure
-x = np.linspace(-3,3,50)
+x = np.linspace(-3, 3, 50)
 y1 = 2*x+1
 y2 = x**2
 # plt.figure()
 # plt.plot(x,y1)
 
 # 一个figure中的两条线，num = 3名称,figsize = (8,5)长宽
-# plt.figure(num = 3,figsize = (8,5))
+# plt.figure(num = 3, figsize = (8,5))
 # plt.plot(x,y2)
 # 线条的颜色，宽度，风格
 # plt.plot(x,y1	,color = 'red',linewidth = 1.0,linestyle='--')
@@ -98,10 +98,10 @@ x0 = 1
 y0 = 2*x0 + 1
 
 # plot是画的直线，scatter是画的点
-plt.scatter(x0 , y0 , s = 50 , color = 'b')
+plt.scatter(x0, y0, s=50, color='b')
 
 # 画一条虚线，连接到x轴
-plt.plot([x0,x0],[y0,0],'k--',lw = 2.5) 
+plt.plot([x0, x0], [y0, 0], 'k--', lw=2.5)
 
 # 添加标注,方法一
 # plt.annotate(r'$2x+1=%s$' %y0,xy = (x0,y0),xycoords ='data',xytext=(+30,-30))

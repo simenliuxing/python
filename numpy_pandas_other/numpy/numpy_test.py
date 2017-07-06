@@ -49,13 +49,13 @@ c = np.mean(a,axis=0)
 # print c
 
 # 索引
-a = np.arange(3,15).reshape((3,4))
+a = np.arange(3, 15).reshape((3, 4))
 c = a[2]
-c = a[1,1]
+c = a[1, 1]
 c = a[1][1]
-c = a[2,:]
-c = a[:,1]
-c = a[1,1:3]
+c = a[2, :]
+c = a[:, 1]
+c = a[1, 1:3]
 # for row in a:
 # 	print row
 
