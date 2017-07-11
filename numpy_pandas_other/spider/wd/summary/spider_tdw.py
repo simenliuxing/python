@@ -95,7 +95,8 @@ def spider_wd():
         result['今日成交额'] = str(today_sum) + '万元'
 
         # 总注册用户数
-        result['注册用户数'] = ''
+        total_account = float(tree.xpath("//*[@id='myTargetElement']/text()")[0])/10000
+        result['注册用户数'] = str(total_account) + '万'
 
         # 数据日期
         result['日期'] = time.strftime('%Y-%m-%d')
@@ -129,7 +130,7 @@ def re_spider_wd():
     return json.dumps(message).decode('unicode-escape')
 
 if __name__ == '__main__':
-    for n in range(1, 100):
-        print(spider_wd())
+    # for n in range(1, 2):
+    print(re_spider_wd())
 
 
