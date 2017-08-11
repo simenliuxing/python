@@ -3,13 +3,14 @@
 # Author:liuxing
 
 from pytesser import *
-# import pytesseract
+import pytesseract
 #
 # print pytesseract.image_to_string(Image.open("1111.jpg"))
 # print pytesseract.image_to_string(Image.open("2222.jpg"))
 # print pytesseract.image_to_string(Image.open("3333.png"))
 # print pytesseract.image_to_string(Image.open("4444.jpg"))
 # print pytesseract.image_to_string(Image.open("5555.jpeg"))
+print pytesseract.image_to_string(Image.open("zttt.png"))
 
 
 # print image_file_to_string("1111.jpg")
@@ -18,8 +19,7 @@ from pytesser import *
 # print image_file_to_string("4444.jpg")
 # print image_file_to_string("5555.jpeg")
 # print image_file_to_string("6666.jpg")
-print image_file_to_string("http://shixin.court.gov.cn/captchaNew.do?"
-                           "captchaId=038eda2136a4478ab166874e92792bed&random=0.7420371655304532")
+print image_file_to_string("zttt.png")
 
 
 

@@ -11,7 +11,6 @@ import requests
 import json
 import sys
 import collections
-from lxml import etree
 from requests.exceptions import ProxyError
 default_encoding = 'utf-8'
 if sys.getdefaultencoding() != default_encoding:
