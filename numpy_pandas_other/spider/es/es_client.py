@@ -5,6 +5,11 @@
 import elasticsearch
 from elasticsearch.helpers import bulk
 import json
+import sys
+default_encoding = 'utf-8'
+if sys.getdefaultencoding() != default_encoding:
+    reload(sys)
+    sys.setdefaultencoding(default_encoding)
 
 
 class ElasticSearchClient(object):
@@ -23,6 +28,17 @@ class ElasticSearchClient(object):
             http_auth=('elastic', 'cgtz@bigdata')
         )
         return es
+
+
+def is_chinese(s):
+    """
+    判断是否有中文
+    :return:
+    """
+    for ch in s.decode('utf-8'):
+        if u'\u4e00' <= ch <= u'\u9fff':
+            return True
+    return False
 
 
 class LoadElasticSearch(object):
@@ -107,6 +123,13 @@ class LoadElasticSearch(object):
         row_obj.pop("_id")
         self.es_client.index(index=self.index, doc_type=self.doc_type, body=row_obj, id=_id)
 
+    # 如果返回结果>=1,这表明该黑名单已经存在了
+    def search_data(self, id_card_no, name):
+        return len(self.es_client.search(index="blacklist",
+                                         body={"query": {"bool": {"filter": [{"term": {"ID_card_no": str(id_card_no)}},
+                                                                             {"term": {"name": str(name)}}]}}})['hits'][
+                       'hits'])
+
     def add_date_bulk(self, row_obj_list):
         """
         批量插入ES
@@ -115,33 +138,37 @@ class LoadElasticSearch(object):
         i = 1
         bulk_num = 2000  # 2000条为一批
         for row_obj in row_obj_list:
-            action = {
-                "_index": self.index,
-                "_type": self.doc_type,
-                "_source": {
-                    'from_platform': row_obj.get('from_platform', None),
-                    'name': row_obj.get('name', None),
-                    'ID_card_no': row_obj.get('ID_card_no', None),
-                    'ID_card_no_pre': row_obj.get('ID_card_no_pre', None),
-                    'phone_no': row_obj.get('phone_no', None),
-                    'qq': row_obj.get('qq', None),
-                    'gender': row_obj.get('gender', None),
-                    'address': row_obj.get('address', None),
-                    'involved_amt': row_obj.get('involved_amt', None),
-                    'filing_time': row_obj.get('filing_time', None),
-                    'case_code': row_obj.get('case_code', None),
-                    'notes': row_obj.get('notes', None),
+            id_card = row_obj.get('ID_card_no', '')
+            name = row_obj.get('name', '')
+            if id_card and name and len(id_card) >= 6 and (not is_chinese(id_card)):
+                action = {
+                    "_index": self.index,
+                    "_type": self.doc_type,
+                    "_id":str(id_card)+str(name),
+                    "_source": {
+                        'from_platform': row_obj.get('from_platform', '').strip(),
+                        'name': row_obj.get('name', '').strip(),
+                        'ID_card_no': row_obj.get('ID_card_no', '').strip(),
+                        'ID_card_no_pre': row_obj.get('ID_card_no_pre', '').strip(),
+                        'phone_no': row_obj.get('phone_no', '').strip(),
+                        'qq': row_obj.get('qq', '').strip(),
+                        'gender': row_obj.get('gender', '').strip(),
+                        'address': row_obj.get('address', '').strip(),
+                        'involved_amt': row_obj.get('involved_amt', '').strip(),
+                        'filing_time': row_obj.get('filing_time', '').strip(),
+                        'case_code': row_obj.get('case_code', '').strip(),
+                        'notes': row_obj.get('notes', '').strip(),
+                    }
                 }
-            }
-            load_data.append(action)
-            i += 1
-            # 批量处理
-            if len(load_data) == bulk_num:
-                print '插入', i / bulk_num, '批数据'
-                print len(load_data)
-                success, failed = bulk(self.es_client, load_data, index=self.index, raise_on_error=True)
-                del load_data[0:len(load_data)]
-                print success, failed
+                load_data.append(action)
+                i += 1
+                # 批量处理
+                if len(load_data) == bulk_num:
+                    print '插入', i / bulk_num, '批数据'
+                    print len(load_data)
+                    success, failed = bulk(self.es_client, load_data, index=self.index, raise_on_error=True)
+                    del load_data[0:len(load_data)]
+                    print success, failed
 
         if len(load_data) > 0:
             success, failed = bulk(self.es_client, load_data, index=self.index, raise_on_error=True)
@@ -512,6 +539,26 @@ class LoadElasticSearch(object):
                 row_obj_list.append(temp_data)
         return row_obj_list
 
+    @staticmethod
+    def user_id_black_parse_insert():
+        row_obj_list = []
+        with open('./user_id_black.txt', 'r') as f:
+            for line in f:
+                temp_data = write_obj.copy()
+                line = line.split('\t')
+                if len(line) == 7:
+                    temp_data['name'] = line[1].strip()
+                    temp_data['address'] = line[3].strip()
+                    temp_data['phone_no'] = line[4].strip()
+                    temp_data['from_platform'] = line[6].strip()
+                    temp_data['ID_card_no'] = line[2].strip()
+                    id_card_no_pre = temp_data.get('ID_card_no', None)
+                    # 获取身份证，如果有
+                    if id_card_no_pre:
+                        temp_data['ID_card_no_pre'] = id_card_no_pre[0: 6]
+                    row_obj_list.append(temp_data)
+        return row_obj_list
+
 
 if __name__ == '__main__':
     write_obj = {
@@ -542,46 +589,59 @@ if __name__ == '__main__':
     }
     load_es = LoadElasticSearch('blacklist', 'promise')
 
-    # # 批量插入数据测试
+    # 批量插入数据测试
     # print('--------jiedaibao_parse_insert-----------')
     # row_obj_list = LoadElasticSearch.jiedaibao_parse_insert()
     # load_es.add_date_bulk(row_obj_list)
+    #
     # print('--------jyqfy_gov_parse_insert-----------')
     # row_obj_list = LoadElasticSearch.jyqfy_gov_parse_insert()
     # load_es.add_date_bulk(row_obj_list)
+    #
     # print('--------beicaiwang_parse_insert-----------')
     # row_obj_list = LoadElasticSearch.beicaiwang_parse_insert()
     # load_es.add_date_bulk(row_obj_list)
+    #
     # print('--------hbfy_gov_parse_insert-----------')
     # row_obj_list = LoadElasticSearch.hbfy_gov_parse_insert()
     # load_es.add_date_bulk(row_obj_list)
+    #
     # print('---------kaikaidai_parse_insert----------')
     # row_obj_list = LoadElasticSearch.kaikaidai_parse_insert()
     # load_es.add_date_bulk(row_obj_list)
+    #
     # print('--------sccourt_gov_parse_insert-----------')
     # row_obj_list = LoadElasticSearch.sccourt_gov_parse_insert()
     # load_es.add_date_bulk(row_obj_list)
+    #
     # print('---------xinyongheimingdan_parse_insert----------')
     # row_obj_list = LoadElasticSearch.xinyongheimingdan_parse_insert()
     # load_es.add_date_bulk(row_obj_list)
+    #
     # print('--------nanhai_gov_parse_insert-----------')
     # row_obj_list = LoadElasticSearch.nanhai_gov_parse_insert()
     # load_es.add_date_bulk(row_obj_list)
+    #
     # print('---------dailianmeng_parse_insert----------')
     # row_obj_list = LoadElasticSearch.dailianmeng_parse_insert()
     # load_es.add_date_bulk(row_obj_list)
+    #
     # print('---------luchengqu_parse_insert----------')
     # row_obj_list = LoadElasticSearch.luchengqu_parse_insert()
     # load_es.add_date_bulk(row_obj_list)
+    #
     # print('----------jscredit_parse_insert---------')
     # row_obj_list = LoadElasticSearch.jscredit_parse_insert()
     # load_es.add_date_bulk(row_obj_list)
+    #
     # print('----------hbcredit_parse_insert---------')
     # row_obj_list = LoadElasticSearch.hbcredit_parse_insert()
     # load_es.add_date_bulk(row_obj_list)
+    #
     # print('----------cqfygzfw_parse_insert---------')
     # row_obj_list = LoadElasticSearch.cqfygzfw_parse_insert()
     # load_es.add_date_bulk(row_obj_list)
+    #
     # print('----------nbcredit_gov_parse_insert---------')
     # row_obj_list = LoadElasticSearch.nbcredit_gov_parse_insert()
     # load_es.add_date_bulk(row_obj_list)
@@ -589,10 +649,11 @@ if __name__ == '__main__':
     #     print('----------zjsfgkw'+str(i)+'_parse_insert ---------')
     #     row_obj_list = LoadElasticSearch.zjsfgkw_parse_insert(i)
     #     load_es.add_date_bulk(row_obj_list)
-    # print('----------anxifayuan_gov_parse_insert---------')
-    # row_obj_list = LoadElasticSearch.anxifayuan_gov_parse_insert()
+    #
+    # print('----------gzcourt_gov_parse_insert---------')
+    # row_obj_list = LoadElasticSearch.gzcourt_gov_parse_insert()
     # load_es.add_date_bulk(row_obj_list)
 
-    print('----------gzcourt_gov_parse_insert---------')
-    row_obj_list = LoadElasticSearch.gzcourt_gov_parse_insert()
+    print('----------user_id_black_parse_insert---------')
+    row_obj_list = LoadElasticSearch.user_id_black_parse_insert()
     load_es.add_date_bulk(row_obj_list)
