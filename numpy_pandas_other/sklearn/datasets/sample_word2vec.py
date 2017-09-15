@@ -3,7 +3,7 @@
 # Author:liuxing
 
 '''
-    通过搜狗新闻语料用word2Vec训练中文模型
+    通过搜狗新闻语料用word2Vec训练中文模型   查找相似词语
     数据地址：http://www.sogou.com/labs/resource/ca.php
 '''
 import jieba

@@ -375,7 +375,7 @@ if __name__ == '__main__':
                     '&_=1504227514784'
                     ]
         # 爬取姓氏的前50页
-        for page_num in range(1, 50):
+        for page_num in range(0, 50):
             url_list.append(
                         'https://sp0.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php'
                         '?resource_id=6899'
@@ -383,7 +383,7 @@ if __name__ == '__main__':
                         '&cardNum='
                         '&iname=' + first_name + ''
                         '&areaName='
-                        '&pn='+str(page_num*50)+''
+                        '&pn='+str(page_num*10)+''
                         '&rn=10'
                         '&ie=utf-8'
                         '&oe=utf-8'

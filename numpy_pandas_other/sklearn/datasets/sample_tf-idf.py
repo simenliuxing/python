@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
 # Author:liuxing
-
+'''
+    文档关键字提取
+'''
 import os
 import jieba
 import sys
