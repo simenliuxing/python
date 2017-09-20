@@ -154,7 +154,7 @@ def insert():
 if __name__ == '__main__':
     load_es = LoadElasticSearchTest('blacklist', 'promise')
 
-    result = load_es.search_data('99999')
+    result = load_es.search_data('111111')
     print len(result)
     for re in result:
         load_es.delete_date(re['_id'])
