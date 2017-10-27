@@ -75,9 +75,9 @@ def insert_db(result):
 def write_dis(result):
     result = json.loads(result)
     if result['statue_code'] != 0:
-        with open('./wd.txt', 'a') as f:
+        with open('./py_tool.txt', 'a') as f:
             # 如果文件存在，则新写入的数据换一行
-            if os.path.isfile('./wd.txt'):
+            if os.path.isfile('./py_tool.txt'):
                 f.write('\n')
             f.write(result['msg']['来源平台'.decode("utf-8")])
             f.write('\t')

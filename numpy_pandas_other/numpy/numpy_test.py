@@ -46,7 +46,7 @@ c = (a.T.dot(a))
 # 大于9变成9,小于5变成5,其他不变
 c = np.clip(a,5,9)
 c = np.mean(a,axis=0)
-# print c
+# print(c)
 
 # 索引
 a = np.arange(3, 15).reshape((3, 4))
@@ -110,5 +110,5 @@ d[1:3] = 44
 # print a is b
 b = a.copy()
 a[3] = 99
-print a
-print b
+print(a)
+print(b)
